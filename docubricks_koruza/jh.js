@@ -149,10 +149,9 @@ function getBricksTreeR(m,parentid){
 
 /**
  * 
- * function to return count for physical item
+ * Function to return count for physical item
  * 
  */
-
 function getPhysicalPartCount(db){
 	//Set all to 0
 	var partcount = {};
@@ -177,7 +176,6 @@ function getPhysicalPartCount(db){
 		});
 		//TODO handle circular dependencies
 	}
-
 	
 	//Count recursively
 	var m = getBricksMap(db);
@@ -188,3 +186,56 @@ function getPhysicalPartCount(db){
 	return partcount;
 }
 
+
+function Display(data) {
+
+	var output = document.getElementById("output");
+
+	//Show("Data from URL: "+url);
+
+	if (data && data.physical_part) {
+		if (data.physical_part.length) {
+			// multiple statuses
+			for (var i=0, sl=data.physical_part.length; i < sl; i++) {
+				Show(data.physical_part[i]);
+			}
+		}
+		else {
+			// single status
+			Show(data.physical_part);
+		}
+	}
+
+	// display item
+	function Show(physical_part) {
+		if (typeof physical_part != "string") {
+			physical_part = physical_part.description;
+		}
+		var p = document.createElement("p");
+		p.appendChild(document.createTextNode(physical_part));
+		output.appendChild(p);
+	}
+
+}
+
+
+function loadxml(){
+	// XML file
+	var url = "instructions.docubricks.xml";
+	// AJAX request
+	var obj=new Object();
+	var xhr = (window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP"));
+	xhr.onreadystatechange = XHRhandler;
+	xhr.open("GET", url, true);
+	xhr.send(null);
+	// handle response
+	function XHRhandler() {
+		if (xhr.readyState == 4) {
+			var obj = XML2jsobj(xhr.responseXML.documentElement);
+			//console.log(obj);
+			xhr = null;
+			headx(obj);
+		}
+	}
+
+}
