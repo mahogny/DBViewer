@@ -17,7 +17,7 @@
 <body>
 
 	<nav id="menu">
-		<h1 class="center">Boo!</h1>
+		<h1 class="center"></h1>
 	</nav>
 
 	<main id="panel"> <header id="top-bar" class="barx"
@@ -153,7 +153,7 @@ loadxml();
 
 
 
-		if("what" in thisunit){
+		if("what" in thisunit && thisunit.what.length!=undefined){
 			var pwhat=document.createElement("p");
 		 	pwhat.setAttribute("align","left");
 			var text=document.createTextNode(thisunit.what);
@@ -177,7 +177,7 @@ loadxml();
 
 
 
-		if("why" in thisunit.why){
+		if("why" in thisunit.why && thisunit.why.length!=undefined){
 			var pwhy=document.createElement("p");
 			pwhy.setAttribute("align","left");
 			var text=document.createTextNode(thisunit.why);
@@ -201,13 +201,13 @@ loadxml();
 		qhow.appendChild(qhowa);
 
 
-		if("why" in thisunit){
-				var phow=document.createElement("p");
-				phow.setAttribute("align","left");
-				var text=document.createTextNode(thisunit.how);
-				phow.appendChild(text);
-				qhow.appendChild(phow);
-				dx.appendChild(qhow);
+		if("how" in thisunit && thisunit.how.length!=undefined){
+			var phow=document.createElement("p");
+			phow.setAttribute("align","left");
+			var text=document.createTextNode(thisunit.how);
+			phow.appendChild(text);
+			qhow.appendChild(phow);
+			dx.appendChild(qhow);
 		}
 		else{
 				dx.appendChild(qhow);
