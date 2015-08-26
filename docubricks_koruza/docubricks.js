@@ -25,9 +25,7 @@ function renderBricksTreeR(db,lev,elemTree, m){
 }
 
 /**
- * 
  * Render the tree
- * 
  */
 function renderBricksTree(db){
 	
@@ -42,14 +40,7 @@ function renderBricksTree(db){
 	
 	renderBricksTreeR(db, bt, elemChild, m);
 
-	console.log(getPhysicalPartCount(db));
-
-	/*
-	console.log();
-alert(JSON.stringify(1
-));*/
-	
-	
+	//console.log(getPhysicalPartCount(db));
 }
 
 
@@ -184,8 +175,9 @@ function getPhysicalPartCount(db){
 }
 
 
-function Display(data) {
 
+
+function Display(data) {
 	var output = document.getElementById("output");
 
 	//Show("Data from URL: "+url);
@@ -216,30 +208,10 @@ function Display(data) {
 }
 
 
-function loadxml(){
-	// XML file
-	var url = "instructions.docubricks.xml";
-	// AJAX request
-	var obj=new Object();
-	var xhr = (window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("Microsoft.XMLHTTP"));
-	xhr.onreadystatechange = XHRhandler;
-	xhr.open("GET", url, true);
-	xhr.send(null);
-	// handle response
-	function XHRhandler() {
-		if (xhr.readyState == 4) {
-			console.log(xhr.responseXML.documentElement);
-			var obj = XML2jsobj(xhr.responseXML.documentElement);
-			console.log(obj);
-			xhr = null;
-			headx(obj);
-		}
-	}
 
-}
-
-
-
+/**
+ * Turn XML into string
+ */
 function getXmlString($xmlObj){   
     var xmlString="";
     $xmlObj.children().each(function(){
@@ -255,50 +227,46 @@ function getXmlString($xmlObj){
 }
 
 
+/**
+ * Extract XML from a string
+ */
 function string2xml(txt){
-	if (window.DOMParser)
-	  {
-	  parser=new DOMParser();
-	  return parser.parseFromString(txt,"text/xml");
-	  }
-	else // Internet Explorer
-	  {
-	  xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
-	  xmlDoc.async=false;
-	  xmlDoc.loadXML(txt);
-	  return xmlDoc;
-	  } 
+	if (window.DOMParser){
+		parser=new DOMParser();
+		return parser.parseFromString(txt,"text/xml");
+	} else { // Internet Explorer 
+		xmlDoc=new ActiveXObject("Microsoft.XMLDOM");
+		xmlDoc.async=false;
+		xmlDoc.loadXML(txt);
+		return xmlDoc;
+	} 
 }
 
+
+
 function loadxml2(){
-	//TODO
-	/*
-	var xmls = getXmlString($("project"));
-	alert($("project").get());
-	alert(XML2jsobj(xmls));
-	*/
+	//think this can be done less convoluted?
 	xmls = document.getElementById("hiddendata").children[0];
 	xmls = new XMLSerializer().serializeToString(xmls);
 	xmls = string2xml(xmls).documentElement;
 	
 	console.log(xmls);
 	
-	headx(XML2jsobj(xmls));
+	populatePage(XML2jsobj(xmls));
 }
 
 
 
 /**
  * 
+ * The function that takes a document and populates the page with content
+ * 
  * @param db
  */
-function headx(db){
-	
-	//a id="pname" class="name" href="#"><span></span></a>	
-//	 alert(db);
-	 
+function populatePage(db){
+
+	//Make the left-side tree
 	renderBricksTree(db);
-	
 	
 	/////////////////////////////////////
 	var q1=document.createElement("a");
@@ -309,7 +277,6 @@ function headx(db){
 	qx=document.getElementById('name-box');
 	qx.appendChild(q1);
 
-	
 	for (var i=0; i < db.unit.length; i++) {
 		var qj=document.createElement("a");
 		qj.setAttribute("class", "button");
@@ -321,16 +288,21 @@ function headx(db){
 		qy.appendChild(qj);
 	}
 
-
-	////////////////////////////////////////////////////////////////////////////////
+	//Create body
 	var dx=document.getElementById("ccentre");
 	var spaces=document.createElement("br");
 	dx.appendChild(spaces);
 	var spaces=document.createElement("br");
 	dx.appendChild(spaces);
 
-	///////////////////////////////////////////////////////////////////////////////
-	/// All the bricks
+	//Set title based on the top brick name
+	var tb = getTopBricks(db);
+	for(var i=0;i<tb.length;i++){
+		var b=getBricksMap(db)[tb[i]];
+		document.title = b.name;
+	}
+	
+	//Add all the bricks
 	for (var i=0; i < db.unit.length; i++) {
 		var thisunit=db.unit[i];
 		addBrick(dx, thisunit);
@@ -354,6 +326,8 @@ function text0(t){
 function addBrick(dx, thisunit){
 	var nm = thisunit.name;
 
+	////////////////////////////////////////////////////////////////////////
+	// Title with abstract
 	var qj1=document.createElement("div");
 	qj1.setAttribute("class","row");
 
@@ -403,7 +377,7 @@ function addBrick(dx, thisunit){
 	wwhow.setAttribute("class","row");
 
 	////////////////////////////////////////////////////////////////////////
-
+	// The top what/why/how
 	addsomehow(dx, thisunit, "what", "What: ");
 	addsomehow(dx, thisunit, "why", "Why: ");
 	addsomehow(dx, thisunit, "how", "How: ");
@@ -578,8 +552,8 @@ function addInstruction(dx, thisunit, instruction){
 			} else {
 				var img=document.createElement("img");
 				//dynamically add an image and set its attribute
-					img.setAttribute("src",'images/Logo.png');
-					//img.id="picture"
+				img.setAttribute("src",'images/Logo.png');
+				//img.id="picture"
 				
 			}
 
@@ -637,5 +611,63 @@ function addsomehow(dx, thisunit, elem, head){
 	else{
 			dx.appendChild(qhow);
 	}
+
+}
+
+
+
+
+
+/**
+ * XML2jsobj v1.0
+ * Converts XML to a JavaScript object
+ * so it can be handled like a JSON message
+ *
+ * By Craig Buckler, @craigbuckler, http://optimalworks.net
+ *
+ * As featured on SitePoint.com:
+ * http://www.sitepoint.com/xml-to-javascript-object/
+ *
+ * Please use as you wish at your own risk.
+ */
+ 
+function XML2jsobj(node) {
+
+	var	data = {};
+
+	// append a value
+	function Add(name, value) {
+		if (data[name]) {
+			if (data[name].constructor != Array) {
+				data[name] = [data[name]];
+			}
+			data[name][data[name].length] = value;
+		}
+		else {
+			data[name] = value;
+		}
+	};
+	
+	// element attributes
+	var c, cn;
+	for (c = 0; cn = node.attributes[c]; c++) {
+		Add(cn.name, cn.value);
+	}
+	
+	// child elements
+	for (c = 0; cn = node.childNodes[c]; c++) {
+		if (cn.nodeType == 1) {
+			if (cn.childNodes.length == 1 && cn.firstChild.nodeType == 3) {
+				// text value
+				Add(cn.nodeName, cn.firstChild.nodeValue);
+			}
+			else {
+				// sub-object
+				Add(cn.nodeName, XML2jsobj(cn));
+			}
+		}
+	}
+
+	return data;
 
 }

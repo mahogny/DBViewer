@@ -1309,15 +1309,4 @@ Take the two M3 25mm screws and fit them trough the wedge.</description>
     <media />
     <assembly_instruction />
   </unit>
-  <unit id="2124646656">
-    <name>Tools</name>
-    <abstract />
-    <long_description />
-    <what />
-    <why />
-    <how />
-    <license />
-    <media />
-    <assembly_instruction />
-  </unit>
 </project>

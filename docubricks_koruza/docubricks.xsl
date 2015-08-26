@@ -9,12 +9,10 @@
 		
 		<link href="terrier/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
 		<link href="terrier/dist/terrierX.css" rel="stylesheet" />
-		<link href="our.css" rel="stylesheet" />
+		<link href="docubricks.css" rel="stylesheet" />
 		
 		<script src="stylesheets/jquery-1.11.3.min.js"></script>
-		<script type="text/javascript" src="stylesheets/CollapsibleLists.js"></script>
-		<script src="xml2jsobj.js"></script>
-		<script type="text/javascript" src="jh.js"></script>
+		<script src="docubricks.js"></script>
 	</head>
 
 	<hiddendata class="hideclass" id="hiddendata">
