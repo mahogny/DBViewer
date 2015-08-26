@@ -324,11 +324,11 @@
   </physical_part>
   <unit id="839384070">
     <name>Manufacturing</name>
-    <abstract />
+    <abstract>some abstract</abstract>
     <long_description />
-    <what />
-    <why />
-    <how />
+    <what>some what</what>
+    <why>some why</why>
+    <how>some how</how>
     <license />
     <media />
     <assembly_instruction />
