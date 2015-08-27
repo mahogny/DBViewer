@@ -23,10 +23,14 @@
 	
 	<!--  Bill of materials table -->
 	<hidden class="hideclass">
-		<div class="col12 colExample" id="bricktable">
-			<h1 id="bomname">Bill of materials</h1>
+		<div class="col12 colExample" id="brickbomtable">
+			<div class="divbom">
+				<p class="p_h2" id="brickbomname">
+					Bill of materials
+				</p>
+			</div>
 			<p align="center">
-				<table>
+				<table width="100%">
 					<thead>
 						<tr>
 							<th>#</th>
@@ -35,12 +39,12 @@
 							<th>SUPPLIER</th>
 						</tr>
 					</thead>
-					<tbody id="bombody">
+					<tbody id="brickbombody">
 					</tbody>
 				</table>
 			</p>
 		</div>
-		<tr id="bomrow">
+		<tr id="brickbomrow">
 			<td id="partnum"></td>
 			<td><a id="description"> </a></td>
 			<td id="quantity"></td>
@@ -50,6 +54,31 @@
 	
 	
 	
+	
+	
+
+	<hidden>
+		<div class="col12 colExample" id="brickbomtable">
+			<div class="divinstruction">
+				<p class="p_h2" id="instructionname">
+					
+				</p>
+			</div>
+		</div>
+		<div id="instructionstep">
+		
+		</div>
+	</hidden>	
+
+
+
+
+
+
+
+
+
+	
 	<body>
 	
 		<nav id="menu">
@@ -57,6 +86,7 @@
 		</nav>
 	
 		<main id="panel"> 
+			<!-- 
 			<header id="top-bar" class="barx" style="background: #725DA7;">
 				<div class="container">
 					<div class="row">
@@ -77,6 +107,7 @@
 				<br />
 				<br />
 			</div>
+			-->
 			<div id="ptree"></div>
 			<div id="ccentre" class="container center"></div>
 			

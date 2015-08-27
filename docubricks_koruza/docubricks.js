@@ -289,6 +289,9 @@ function populatePage(db){
 	//Set title based on the top brick name
 	document.title=getNameOfProject(db);
 
+	var dx=document.getElementById("ccentre");
+
+	/*
 	/////////////////////////////////////
 	var q1=document.createElement("a");
 	q1.setAttribute("class", "name");
@@ -308,14 +311,14 @@ function populatePage(db){
 		qy=document.getElementById("cola");
 		qy.appendChild(qj);
 	}
-
 	//Create body
-	var dx=document.getElementById("ccentre");
 	var spaces=document.createElement("br");
 	dx.appendChild(spaces);
 	var spaces=document.createElement("br");
 	dx.appendChild(spaces);
+*/
 
+	
 	
 	//Add all the bricks, in natural order
 	var flatlistbricks = flattenBricksTree(db);
@@ -359,7 +362,8 @@ function addBrick(dx, thisunit, db){
 	qj1.setAttribute("class","row");
 
 	var qj1a=document.createElement("div");
-	qj1a.setAttribute("class","col7 colExample");
+	qj1a.setAttribute("class","project_title");
+//	qj1a.setAttribute("class","col7 colExample");
 
 	var pqja=document.createElement("p");
 	pqja.setAttribute("align","left");
@@ -383,20 +387,26 @@ function addBrick(dx, thisunit, db){
 		qj1a.appendChild(pqjb);
 	}
 
-	var toi=typeof thisunit.media[0];
-	var qj1b=document.createElement("div");
-	qj1b.setAttribute("class","col5 colExample");
-	var img=document.createElement("img");
-	if(toi == "undefined"){
-						//dynamically add an image and set its attribute
-		img.setAttribute("src",'images/Logo.png');
+	////////////////////////////////////////////////////////////////////////
+	// Representative image
+	if(false){
+		var toi=typeof thisunit.media[0];
+		var qj1b=document.createElement("div");
+		qj1b.setAttribute("class","col5 colExample");
+		var img=document.createElement("img");
+		if(toi == "undefined"){
+							//dynamically add an image and set its attribute
+			img.setAttribute("src",'images/Logo.png');
+								//img.id="picture"
+		}else{
+			img.setAttribute("src",thisunit.media[0]);
 							//img.id="picture"
-	}else{
-		img.setAttribute("src",thisunit.media[0]);
-						//img.id="picture"
+		}
+		qj1b.appendChild(img);
+		qj1.appendChild(qj1b);
 	}
-	qj1b.appendChild(img);
-	qj1.appendChild(qj1b);
+	
+	
 	dx.appendChild(qj1);
 
 	var wwhow=document.createElement("div");
@@ -512,7 +522,7 @@ function addBrick(dx, thisunit, db){
 	
 	////////////////////////////////////////////////////////////////////////
 	// BOM
-	addBOM(dx, thisunit, db);
+	addBrickBOM(dx, thisunit, db);
 	
 }
 
@@ -520,13 +530,16 @@ function addBrick(dx, thisunit, db){
 
 
 
-
-function addBOM(dx, thisbrick, db){
+/**
+ * Add total bill of materials
+ */
+/*
+function addTotalBOM(dx, thisbrick, db){
 	//Add new instance of BOM
-	var form2 = $("#bricktable").get(0).cloneNode(true);
+	var form2 = $("#brickbomtable").get(0).cloneNode(true);
 	dx.appendChild(form2);
 	form2=$(form2);
-	var tbody=$(form2).find("#bombody");
+	var tbody=$(form2).find("#brickbombody");
 	
 	//formBomname.html("foo");
 
@@ -535,7 +548,59 @@ function addBOM(dx, thisbrick, db){
 	var brickmap = getBricksMap(db);
 	pforeach(thisbrick["logical_part"], function(lu){
 		pforeach(lu["implementation"], function(imp){
-			var row = $("#bomrow").get(0).cloneNode(true);
+			var row = $("#brickbomrow").get(0).cloneNode(true);
+			tbody.get(0).appendChild(row);
+			row=$(row);
+			row.find("#quantity").html(imp.quantity);
+			
+			if(imp.type=="physical_part"){
+				
+				var thepart=pmap[imp.id];
+				row.find("#description").html(thepart.description);
+				
+
+			} else if(imp.type=="unit") {
+				
+				var thebrick = brickmap[imp.id];
+
+				row.find("#description").html(thebrick.name);
+
+				row.find("#description").attr("href","#brick_"+thebrick.id);
+
+				
+			} else 
+				console.log("bad imp.type "+imp.type)
+		});
+	});
+	
+	
+	  
+	
+}
+*/
+
+
+
+
+
+/**
+ * Add brick bill of materials
+ */
+function addBrickBOM(dx, thisbrick, db){
+	//Add new instance of BOM
+	var form2 = $("#brickbomtable").get(0).cloneNode(true);
+	dx.appendChild(form2);
+	form2=$(form2);
+	var tbody=$(form2).find("#brickbombody");
+	
+	//formBomname.html("foo");
+
+	//Add rows
+	var pmap = getPartsMap(db);
+	var brickmap = getBricksMap(db);
+	pforeach(thisbrick["logical_part"], function(lu){
+		pforeach(lu["implementation"], function(imp){
+			var row = $("#brickbomrow").get(0).cloneNode(true);
 			tbody.get(0).appendChild(row);
 			row=$(row);
 			row.find("#quantity").html(imp.quantity);
@@ -567,22 +632,28 @@ function addBOM(dx, thisbrick, db){
 
 
 
-
 /**
  * Add one set of instructions
  */
 function addInstruction(dx, thisunit, instruction){
-	
 	instruction.step = atleast1(instruction["step"]);
 
+	//Add new instance of BOM
+	var form2 = $("#instructiontable").get(0).cloneNode(true);
+	dx.appendChild(form2);
+	form2=$(form2);
+	var tbody=$(form2).find("#brickbombody");
+
+	
 	var assins=document.createElement("div");
 	var aihead=document.createElement("div");
 	aihead.setAttribute("class","col12 colExample");
 	var aititle=document.createElement("p");
 	aititle.setAttribute("align","left");
+	
 	var aih1=document.createElement("h1");
-	var aihtxt=document.createTextNode(thisunit.name+ " Assembly Instructions.");
-	aih1.appendChild(aihtxt);
+	aih1.appendChild(document.createTextNode(/*thisunit.name+ */"Assembly Instructions"));
+	
 	aititle.appendChild(aih1);
 	aihead.appendChild(aititle);
 	assins.appendChild(aihead);
@@ -608,15 +679,7 @@ function addInstruction(dx, thisunit, instruction){
 			thisstep=instruction.step[muj];
 			var aidivn=document.createElement("div");
 
-			var aititle=document.createElement("p");
-			aititle.setAttribute("align","left");
-			var aih3=document.createElement("h3");
-			var saihtxt=document.createTextNode("Step "+(1+muj).toString());
-
-			aih3.appendChild(saihtxt);
-			aititle.appendChild(aih3);
-			aidivn.appendChild(aititle);
-
+	
 			var aininfo=document.createElement("div");
 			aininfo.setAttribute("class","row");
 
@@ -631,19 +694,23 @@ function addInstruction(dx, thisunit, instruction){
 				var img=document.createElement("img");
 				img.setAttribute("src",stimgsrc);
 				img.setAttribute("width","100%");
+				
+				
+				var stepimgp=document.createElement("p")
+				stepimgp.setAttribute("align","left");
+				stepimgp.appendChild(img);
+				stepnimg.appendChild(stepimgp);
 			} else {
+				/*
 				var img=document.createElement("img");
 				//dynamically add an image and set its attribute
 				img.setAttribute("src",'images/Logo.png');
 				//img.id="picture"
+				*/
 				
 			}
-
-			var stepimgp=document.createElement("p")
-			stepimgp.setAttribute("align","left");
-			stepimgp.appendChild(img);
-			stepnimg.appendChild(stepimgp);
 			aininfo.appendChild(stepnimg);
+
 			//qj1.appendChild(stepnimg);
 			//dx.appendChild();
 
@@ -653,7 +720,14 @@ function addInstruction(dx, thisunit, instruction){
 			stepndesc.setAttribute("class","col6 colExample");
 			var aidescp=document.createElement("p");
 			aidescp.setAttribute("align","left");
-			var aidescptxt=document.createTextNode(thisunit.assembly_instruction.step[muj].description);
+			
+			
+			var aititle=document.createElement("b");
+			aititle.appendChild(document.createTextNode("Step "+(1+muj)+". "));
+			aidescp.appendChild(aititle);
+
+			
+			var aidescptxt=document.createTextNode(text0(thisunit.assembly_instruction.step[muj].description));
 			aidescp.appendChild(aidescptxt);
 			stepndesc.appendChild(aidescp);
 			aininfo.appendChild(stepndesc);

@@ -1,3 +1,29 @@
 .hideclass {
   display:none;
 }
+
+
+.project_title {
+    background-color: rgba(53,94,129,1);
+    height: 12vh;
+    width: 100%;
+    color: white;
+    margin: 0;
+    float: left;
+}
+
+.p_h2 {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.p_stepnum {
+	font-size: 1rem;
+}
+
+.divbom {
+    background-color: rgba(53,111,162,1);
+	align: right;
+}
+
+
