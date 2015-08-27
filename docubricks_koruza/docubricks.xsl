@@ -15,9 +15,40 @@
 		<script src="docubricks.js"></script>
 	</head>
 
+	<!--  Original XML goes in here  -->
 	<hiddendata class="hideclass" id="hiddendata">
 		<xsl:copy-of select="project"/>
 	</hiddendata>
+	
+	
+	<!--  Bill of materials table -->
+	<hidden class="hideclass">
+		<div class="col12 colExample" id="bricktable">
+			<h1 id="bomname">Bill of materials</h1>
+			<p align="center">
+				<table>
+					<thead>
+						<tr>
+							<th>#</th>
+							<th>DESCRIPTION</th>
+							<th>QUANTITY</th>
+							<th>SUPPLIER</th>
+						</tr>
+					</thead>
+					<tbody id="bombody">
+					</tbody>
+				</table>
+			</p>
+		</div>
+		<tr id="bomrow">
+			<td id="partnum"></td>
+			<td><a id="description"> </a></td>
+			<td id="quantity"></td>
+			<td id="supplier"></td>
+		</tr>
+	</hidden>
+	
+	
 	
 	<body>
 	

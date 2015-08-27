@@ -59,6 +59,17 @@ function getBricksMap(db) {
 	return ret;
 }
 
+/**
+ * Get a JSON map   partID => part
+ */
+function getPartsMap(db) {	
+	var ret={};
+	pforeach(db["physical_part"],function(p){
+		ret[p.id]=p;
+	});
+	return ret;
+}
+
 
 function atleast1(elem){
 	if(elem==undefined)
@@ -136,7 +147,6 @@ function getBricksTreeR(m,parentid){
 
 
 
-
 /**
  * Function to return count for physical item
  */
@@ -153,7 +163,6 @@ function getPhysicalPartCount(db){
 			pforeach(lu["implementation"], function(imp){
 				if(imp.type=="physical_part"){
 					var q=lu.quantity;
-					console.log(q);
 					if(isNaN(q))
 						q="1";
 					partcount[imp.id] += parseInt(q);
@@ -250,12 +259,21 @@ function loadxml2(){
 	xmls = new XMLSerializer().serializeToString(xmls);
 	xmls = string2xml(xmls).documentElement;
 	
-	console.log(xmls);
+	//console.log(xmls);
 	
 	populatePage(XML2jsobj(xmls));
 }
 
 
+function getNameOfProject(db){
+	//Get name of project
+	var tb = getTopBricks(db);
+	for(var i=0;i<tb.length;i++){
+		var b=getBricksMap(db)[tb[i]];
+		return b.name;
+	}
+	return "";
+}
 
 /**
  * 
@@ -267,12 +285,15 @@ function populatePage(db){
 
 	//Make the left-side tree
 	renderBricksTree(db);
-	
+
+	//Set title based on the top brick name
+	document.title=getNameOfProject(db);
+
 	/////////////////////////////////////
 	var q1=document.createElement("a");
 	q1.setAttribute("class", "name");
 	q1.setAttribute("href","#");
-	var qn=document.createTextNode(db.project_name); ///////////// TODO: use top-level brick name
+	var qn=document.createTextNode(getNameOfProject(db)); 
 	q1.appendChild(qn);
 	qx=document.getElementById('name-box');
 	qx.appendChild(q1);
@@ -295,17 +316,16 @@ function populatePage(db){
 	var spaces=document.createElement("br");
 	dx.appendChild(spaces);
 
-	//Set title based on the top brick name
-	var tb = getTopBricks(db);
-	for(var i=0;i<tb.length;i++){
-		var b=getBricksMap(db)[tb[i]];
-		document.title = b.name;
-	}
 	
-	//Add all the bricks
-	for (var i=0; i < db.unit.length; i++) {
-		var thisunit=db.unit[i];
-		addBrick(dx, thisunit);
+	//Add all the bricks, in natural order
+	var flatlistbricks = flattenBricksTree(db);
+	var m = getBricksMap(db);
+	for (var i=0; i < flatlistbricks.length; i++) {
+		var thisunit=m[flatlistbricks[i]];
+		addBrick(dx, thisunit, db);
+
+		for(var o=0;o<15;o++) //must be possible to do this better
+			dx.appendChild(document.createElement("br"));
 	}
 		
 }
@@ -323,9 +343,16 @@ function text0(t){
 /**
  * Add one brick
  */
-function addBrick(dx, thisunit){
+function addBrick(dx, thisunit, db){
 	var nm = thisunit.name;
 
+	
+	////////////////////////////////////////////////////////////////////////
+	// Link here
+	var anch=document.createElement("a");
+	anch.setAttribute("name","brick_"+thisunit.id);
+	dx.appendChild(anch);
+	
 	////////////////////////////////////////////////////////////////////////
 	// Title with abstract
 	var qj1=document.createElement("div");
@@ -354,7 +381,6 @@ function addBrick(dx, thisunit){
 		var text=document.createTextNode(thisunit.abstract);
 		pqjb.appendChild(text);
 		qj1a.appendChild(pqjb);
-		
 	}
 
 	var toi=typeof thisunit.media[0];
@@ -397,7 +423,6 @@ function addBrick(dx, thisunit){
 	qlegnodeb.appendChild(qlegnodec);
 	qlegnodea.appendChild(qlegnodeb);
 	legalnode.appendChild(qlegnodea);
-
 
 	var plegnodeax=document.createElement("p");
 	plegnodeax.setAttribute("align","left");
@@ -476,14 +501,71 @@ function addBrick(dx, thisunit){
 
 	insnode.appendChild(insc);
 	dx.appendChild(insnode);
+	
+	
 	//////////////////////////////////////////////////////////////////////////
-
-
+	// Assembly
 	if(!("assembly_instruction" in thisunit))
 		thisunit.assembly_instruction={};
 	addInstruction(dx, thisunit, thisunit.assembly_instruction);
-	 
+
+	
+	////////////////////////////////////////////////////////////////////////
+	// BOM
+	addBOM(dx, thisunit, db);
+	
 }
+
+
+
+
+
+
+function addBOM(dx, thisbrick, db){
+	//Add new instance of BOM
+	var form2 = $("#bricktable").get(0).cloneNode(true);
+	dx.appendChild(form2);
+	form2=$(form2);
+	var tbody=$(form2).find("#bombody");
+	
+	//formBomname.html("foo");
+
+	//Add rows
+	var pmap = getPartsMap(db);
+	var brickmap = getBricksMap(db);
+	pforeach(thisbrick["logical_part"], function(lu){
+		pforeach(lu["implementation"], function(imp){
+			var row = $("#bomrow").get(0).cloneNode(true);
+			tbody.get(0).appendChild(row);
+			row=$(row);
+			row.find("#quantity").html(imp.quantity);
+			
+			if(imp.type=="physical_part"){
+				
+				var thepart=pmap[imp.id];
+				row.find("#description").html(thepart.description);
+				
+
+			} else if(imp.type=="unit") {
+				
+				var thebrick = brickmap[imp.id];
+
+				row.find("#description").html(thebrick.name);
+
+				row.find("#description").attr("href","#brick_"+thebrick.id);
+
+				
+			} else 
+				console.log("bad imp.type "+imp.type)
+		});
+	});
+	
+	
+	  
+	
+}
+
+
 
 
 /**
@@ -670,4 +752,52 @@ function XML2jsobj(node) {
 
 	return data;
 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function flattenBricksTreeR(db,lev,list, m){	
+	for(var i=0;i<lev.length;i++){
+		var id=lev[i].brickid;
+		if($.inArray(id,lev)==-1)
+			list.push(id);
+		flattenBricksTreeR(db, lev[i].children, list, m);
+	}
+}
+
+/**
+ * Render the tree
+ */
+function flattenBricksTree(db){
+	
+	//Find out tree structure
+	var bt = getBricksTree(db);
+
+	//Output the tree
+	var m = getBricksMap(db);
+	var list=[];
+	flattenBricksTreeR(db, bt, list, m);
+	return list;
+	//console.log(getPhysicalPartCount(db));
 }
