@@ -16,7 +16,6 @@ function renderBricksTree(db){
 	 * 
 	 */
 	function renderBricksTreeR(db,lev,elemTree, m){	
-		console.log(lev);
 		//Add new instance of BOM
 		var form2 = $("#lefttreeinstance").get(0).cloneNode(true);
 		elemTree.appendChild(form2);
