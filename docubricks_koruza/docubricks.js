@@ -397,11 +397,6 @@ function addBrick(dx, thisunit, db){
 		var text=document.createTextNode(thisunit.abstract);
 		pqjb.appendChild(text);
 		qj1a.appendChild(pqjb);
-		
-		/*
-		var br=document.createElement("br");
-		br.setAttribute("clear","all");
-		qj1a.appendChild(br);*/
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -726,29 +721,25 @@ function addInstruction(dx, thisunit, instruction){
  * Optionally add: Why, How, What
  */
 function addsomehow(dx, thisunit, elem, head){
-
-	var qhow=document.createElement("div");
 	if(elem in thisunit && thisunit[elem].length!=undefined){
-		qhow.setAttribute("class","col4 colExample");
+		var qhowb=document.createElement("h1");
+		qhowb.appendChild(document.createTextNode(head));
+
 		var qhowa=document.createElement("p");
 		qhowa.setAttribute("align","left");
-		var qhowb=document.createElement("h1");
-		var qhowc=document.createTextNode(head);
-		qhowb.appendChild(qhowc);
 		qhowa.appendChild(qhowb);
-		qhow.appendChild(qhowa);
-		
-		var phow=document.createElement("p");
-		phow.setAttribute("align","left");
-		var text=document.createTextNode(thisunit[elem]);
-		phow.appendChild(text);
-		qhow.appendChild(phow);
-		dx.appendChild(qhow);
-	}
-	else{
-			dx.appendChild(qhow);
-	}
 
+		var phow=document.createElement("p");
+		phow.setAttribute("align","left");		
+		phow.appendChild(document.createTextNode(thisunit[elem]));
+
+		var qhow=document.createElement("div");
+		qhow.setAttribute("class","col4 colExample");
+		qhow.appendChild(qhowa);
+		dx.appendChild(qhow);
+		
+		qhow.appendChild(phow);
+	}
 }
 
 
