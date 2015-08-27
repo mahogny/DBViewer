@@ -1,47 +1,59 @@
 
-/**
- * Recursively render tree
- * 
- * @param db		Database
- * @param lev		Current level
- * @param elemTree	XML-element to render into
- * @param m			Brick map
- * 
- */
-function renderBricksTreeR(db,lev,elemTree, m){	
-	for(var i=0;i<lev.length;i++){
-		
-		var etop = document.createElement("li");
-		elemTree.appendChild(etop);
-		
-		var elem = document.createTextNode(m[lev[i].brickid].name);
-		etop.appendChild(elem);
-		
-		var elemChild = document.createElement("ul");
-		elemTree.appendChild(elemChild);
-		
-		renderBricksTreeR(db, lev[i].children, elemChild, m);
-	}
-}
 
 /**
  * Render the tree
  */
 function renderBricksTree(db){
+
 	
+	/**
+	 * Recursively render tree
+	 * 
+	 * @param db		Database
+	 * @param lev		Current level
+	 * @param elemTree	XML-element to render into
+	 * @param m			Brick map
+	 * 
+	 */
+	function renderBricksTreeR(db,lev,elemTree, m){	
+		console.log(lev);
+		//Add new instance of BOM
+		var form2 = $("#lefttreeinstance").get(0).cloneNode(true);
+		elemTree.appendChild(form2);
+		var tbody=$(form2).find("#lefttreesubdiv");
+		var thead=$(form2).find("#lefttreenode");
+
+		var div=document.createElement("div");
+		div.setAttribute("class","lefttreenode")
+		thead.get(0).appendChild(div);
+		thead.attr("href","#brick_"+lev.brickid);
+		
+		div.appendChild(document.createTextNode(m[lev.brickid].name));
+
+		for(var i=0;i<lev.children.length;i++){
+			renderBricksTreeR(db, lev.children[i], tbody.get(0), m);
+		}
+	}
+
 	//Find out tree structure
 	var bt = getBricksTree(db);
 
 	//Output the tree
 	var m = getBricksMap(db);
-	var elemTree = document.getElementById("ptree");
-	var elemChild = document.createElement("ul");
-	elemTree.appendChild(elemChild);
-	
-	renderBricksTreeR(db, bt, elemChild, m);
+	var elemTree = document.getElementById("ptree2");
 
-	//console.log(getPhysicalPartCount(db));
+	for(var i=0;i<bt.length;i++){
+		renderBricksTreeR(db, bt[i], elemTree, m);
+	}
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -71,6 +83,10 @@ function getPartsMap(db) {
 }
 
 
+
+/**
+ * Make scalar into an array if needed
+ */
 function atleast1(elem){
 	if(elem==undefined)
 		elem=[];
@@ -124,6 +140,21 @@ function getTopBricks(db){
  * TREE := {brickid:id, children:LIST}
  */
 function getBricksTree(db){
+	
+	
+	function getBricksTreeR(m,parentid){
+		var ret = {brickid:parentid, children:[]};
+		pu = m[parentid];
+		pforeach(pu["logical_part"], function(lu){
+			pforeach(lu["implementation"], function(imp){
+				if(imp.type=="unit")
+					ret.children.push(getBricksTreeR(m, imp.id));
+			});
+		});
+		return ret;
+		//TODO handle circular dependencies
+	}
+	
 	var m = getBricksMap(db);
 	var ret = [];
 	var tb = getTopBricks(db);
@@ -132,18 +163,6 @@ function getBricksTree(db){
 	return ret;
 }
 
-function getBricksTreeR(m,parentid){
-	var ret = {brickid:parentid, children:[]};
-	pu = m[parentid];
-	pforeach(pu["logical_part"], function(lu){
-		pforeach(lu["implementation"], function(imp){
-			if(imp.type=="unit")
-				ret.children.push(getBricksTreeR(m, imp.id));
-		});
-	});
-	return ret;
-	//TODO handle circular dependencies
-}
 
 
 
@@ -186,37 +205,6 @@ function getPhysicalPartCount(db){
 
 
 
-function Display(data) {
-	var output = document.getElementById("output");
-
-	//Show("Data from URL: "+url);
-
-	if (data && data.physical_part) {
-		if (data.physical_part.length) {
-			// multiple statuses
-			for (var i=0, sl=data.physical_part.length; i < sl; i++) {
-				Show(data.physical_part[i]);
-			}
-		}
-		else {
-			// single status
-			Show(data.physical_part);
-		}
-	}
-
-	// display item
-	function Show(physical_part) {
-		if (typeof physical_part != "string") {
-			physical_part = physical_part.description;
-		}
-		var p = document.createElement("p");
-		p.appendChild(document.createTextNode(physical_part));
-		output.appendChild(p);
-	}
-
-}
-
-
 
 /**
  * Turn XML into string
@@ -253,18 +241,22 @@ function string2xml(txt){
 
 
 
+/**
+ * Load the XML the XSLT inserted
+ */
 function loadxml2(){
 	//think this can be done less convoluted?
 	xmls = document.getElementById("hiddendata").children[0];
 	xmls = new XMLSerializer().serializeToString(xmls);
 	xmls = string2xml(xmls).documentElement;
 	
-	//console.log(xmls);
-	
 	populatePage(XML2jsobj(xmls));
 }
 
 
+/**
+ * Get the name of the project (=top brick name)
+ */
 function getNameOfProject(db){
 	//Get name of project
 	var tb = getTopBricks(db);
@@ -327,10 +319,17 @@ function populatePage(db){
 		var thisunit=m[flatlistbricks[i]];
 		addBrick(dx, thisunit, db);
 
-		for(var o=0;o<15;o++) //must be possible to do this better
+		var br=document.createElement("br");
+		br.setAttribute("clear","all");
+		dx.appendChild(br);
+		for(var o=0;o<3;o++) //must be possible to do this better
 			dx.appendChild(document.createElement("br"));
 	}
-		
+	
+	
+	//Add the total BOM
+	addTotalBOM(dx,db);
+	
 }
 
 /**
@@ -434,17 +433,14 @@ function addBrick(dx, thisunit, db){
 	qlegnodea.appendChild(qlegnodeb);
 	legalnode.appendChild(qlegnodea);
 
-	var plegnodeax=document.createElement("p");
-	plegnodeax.setAttribute("align","left");
 
 	thisunit.license=text0(thisunit["license"]);
 	if(thisunit.license!=""){
-		var txta=document.createTextNode("Licence:");
-		plegnodeax.appendChild(txta);
-		legalnode.appendChild(plegnodeax);
+		var plegnodex=document.createElement("p");
+		plegnodex.setAttribute("align","left");
 		
-		var txta2=document.createTextNode(thisunit.license);
-		plegnodex.appendChild(txta2);
+		plegnodex.appendChild(document.createTextNode("Licence:"));
+		plegnodex.appendChild(document.createTextNode(thisunit.license));
 		legalnode.appendChild(plegnodex);
 		
 		anyLegal=true;
@@ -454,9 +450,9 @@ function addBrick(dx, thisunit, db){
 	if(true){
 		var plegnodebx=document.createElement("p");
 		plegnodebx.setAttribute("align","left");
-		var txtb=document.createTextNode("Authors:");
-		plegnodebx.appendChild(txtb);
+		plegnodebx.appendChild(document.createTextNode("Authors:"));
 		legalnode.appendChild(plegnodebx);
+		anyLegal=true;
 	}
 
 
@@ -466,12 +462,14 @@ function addBrick(dx, thisunit, db){
 		var txtc=document.createTextNode("Copyright:");
 		plegnodecx.appendChild(txtc);
 		legalnode.appendChild(plegnodecx);
+		anyLegal=true;
 	}
 
 	if(anyLegal)
 		dx.appendChild(legalnode);
 	
 	//////////////////////////////////////////////////////////////////////////
+	/*
 	var insnode=document.createElement("div");
 	insnode.setAttribute("class","row");
 
@@ -511,7 +509,7 @@ function addBrick(dx, thisunit, db){
 
 	insnode.appendChild(insc);
 	dx.appendChild(insnode);
-	
+	*/
 	
 	//////////////////////////////////////////////////////////////////////////
 	// Assembly
@@ -533,51 +531,27 @@ function addBrick(dx, thisunit, db){
 /**
  * Add total bill of materials
  */
-/*
-function addTotalBOM(dx, thisbrick, db){
+function addTotalBOM(dx, db){
 	//Add new instance of BOM
-	var form2 = $("#brickbomtable").get(0).cloneNode(true);
+	var form2 = $("#totalbomtable").get(0).cloneNode(true);
 	dx.appendChild(form2);
 	form2=$(form2);
-	var tbody=$(form2).find("#brickbombody");
+	var tbody=$(form2).find("#totalbombody");
 	
-	//formBomname.html("foo");
+	var pcount = getPhysicalPartCount(db);
 
 	//Add rows
-	var pmap = getPartsMap(db);
 	var brickmap = getBricksMap(db);
-	pforeach(thisbrick["logical_part"], function(lu){
-		pforeach(lu["implementation"], function(imp){
-			var row = $("#brickbomrow").get(0).cloneNode(true);
-			tbody.get(0).appendChild(row);
-			row=$(row);
-			row.find("#quantity").html(imp.quantity);
-			
-			if(imp.type=="physical_part"){
-				
-				var thepart=pmap[imp.id];
-				row.find("#description").html(thepart.description);
-				
-
-			} else if(imp.type=="unit") {
-				
-				var thebrick = brickmap[imp.id];
-
-				row.find("#description").html(thebrick.name);
-
-				row.find("#description").attr("href","#brick_"+thebrick.id);
-
-				
-			} else 
-				console.log("bad imp.type "+imp.type)
-		});
+	pforeach(db["physical_part"], function(thepart){
+		var row = $("#totalbomrow").get(0).cloneNode(true);
+		tbody.get(0).appendChild(row);
+		row=$(row);
+		row.find("#quantity").html(pcount[thepart.id]);
+		row.find("#description").html(thepart.description);
+		
 	});
 	
-	
-	  
-	
 }
-*/
 
 
 
@@ -603,7 +577,10 @@ function addBrickBOM(dx, thisbrick, db){
 			var row = $("#brickbomrow").get(0).cloneNode(true);
 			tbody.get(0).appendChild(row);
 			row=$(row);
-			row.find("#quantity").html(imp.quantity);
+			var quantity=imp.quantity;
+			if(isNaN(quantity))
+				quantity="1";
+			row.find("#quantity").html(quantity);
 			
 			if(imp.type=="physical_part"){
 				
@@ -637,57 +614,43 @@ function addBrickBOM(dx, thisbrick, db){
  */
 function addInstruction(dx, thisunit, instruction){
 	instruction.step = atleast1(instruction["step"]);
-
-	//Add new instance of BOM
-	var form2 = $("#instructiontable").get(0).cloneNode(true);
-	dx.appendChild(form2);
-	form2=$(form2);
-	var tbody=$(form2).find("#brickbombody");
-
 	
-	var assins=document.createElement("div");
-	var aihead=document.createElement("div");
-	aihead.setAttribute("class","col12 colExample");
-	var aititle=document.createElement("p");
-	aititle.setAttribute("align","left");
-	
-	var aih1=document.createElement("h1");
-	aih1.appendChild(document.createTextNode(/*thisunit.name+ */"Assembly Instructions"));
-	
-	aititle.appendChild(aih1);
-	aihead.appendChild(aititle);
-	assins.appendChild(aihead);
 
 
 	if (instruction.step.length==0){
-		/*
-		var nadadiv=document.createElement("div");
-		nadadiv.setAttribute("class","col12 colExample");
-		var nadap=document.createElement("p");
-		nadap.setAttribute("align","left");
-		var nadadivtxt=document.createTextNode("No information available");
-		nadap.appendChild(nadadivtxt);
-		nadadiv.appendChild(nadap);
-		nadadiv.appendChild(nadap);
-		assins.appendChild(nadadiv);
 
-		dx.appendChild(assins);
-		*/
 	} else{
-			
+		
+		//Add new instance of BOM
+		var form2 = $("#instructiontable").get(0).cloneNode(true);
+		dx.appendChild(form2);
+		//var tbody=$(form2).find("#divinstruction");
+		form2=$(form2);
+
+		//console.log(tbody);
+		
+		$(form2).find("#instructionname").html("Assembly instructions");
+
+
+		
+		
 		for(var muj=0;muj<instruction.step.length;muj++){
 			thisstep=instruction.step[muj];
-			var aidivn=document.createElement("div");
+			
+			var row = $("#instructionstep").get(0).cloneNode(true);
+			form2.get(0).appendChild(row);
+			//row=$(row);
+			//row.find("#quantity").html(imp.quantity);
 
-	
-			var aininfo=document.createElement("div");
-			aininfo.setAttribute("class","row");
-
-			var stepnimg=document.createElement("div");
-			stepnimg.setAttribute("class","col6 colExample");
-
+			
+			
+			
 			///////////////////////////////////////////////////
 			// NOOOOOOTE: there can be more than one media file!
+			// Let any additional images be thumbnails below 
+			
+			var stepnimg=document.createElement("div");
+			stepnimg.setAttribute("class","col6 colExample");
 			var stimgsrc;
 			if("media" in thisstep && "file" in thisstep.media && "url" in thisstep.media.file){
 				stimgsrc=thisstep.media.file.url;
@@ -709,10 +672,8 @@ function addInstruction(dx, thisunit, instruction){
 				*/
 				
 			}
-			aininfo.appendChild(stepnimg);
+			row.appendChild(stepnimg);
 
-			//qj1.appendChild(stepnimg);
-			//dx.appendChild();
 
 			/////////////////////////////////////////////////////
 
@@ -730,11 +691,15 @@ function addInstruction(dx, thisunit, instruction){
 			var aidescptxt=document.createTextNode(text0(thisunit.assembly_instruction.step[muj].description));
 			aidescp.appendChild(aidescptxt);
 			stepndesc.appendChild(aidescp);
-			aininfo.appendChild(stepndesc);
+			row.appendChild(stepndesc);
 
-			aidivn.appendChild(aininfo);
-			assins.appendChild(aidivn);
-			dx.appendChild(assins);
+			var br=document.createElement("br");
+			br.setAttribute("clear","all");
+			row.appendChild(br);
+			
+//			aidivn.appendChild(aininfo);
+//			assins.appendChild(aidivn);
+//			dx.appendChild(assins);
 		}
 	}
 	
@@ -851,20 +816,21 @@ function XML2jsobj(node) {
 
 
 
-function flattenBricksTreeR(db,lev,list, m){	
-	for(var i=0;i<lev.length;i++){
-		var id=lev[i].brickid;
-		if($.inArray(id,lev)==-1)
-			list.push(id);
-		flattenBricksTreeR(db, lev[i].children, list, m);
-	}
-}
 
 /**
- * Render the tree
+ * Return the the bricks tree as a flat list
  */
 function flattenBricksTree(db){
-	
+
+	function flattenBricksTreeR(db,lev,list, m){	
+		for(var i=0;i<lev.length;i++){
+			var id=lev[i].brickid;
+			if($.inArray(id,lev)==-1)
+				list.push(id);
+			flattenBricksTreeR(db, lev[i].children, list, m);
+		}
+	}
+
 	//Find out tree structure
 	var bt = getBricksTree(db);
 
@@ -873,5 +839,4 @@ function flattenBricksTree(db){
 	var list=[];
 	flattenBricksTreeR(db, bt, list, m);
 	return list;
-	//console.log(getPhysicalPartCount(db));
 }
