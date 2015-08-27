@@ -82,6 +82,18 @@ function getPartsMap(db) {
 	return ret;
 }
 
+/**
+ * Get a JSON map   authorID => author
+ */
+function getAuthorMap(db) {	
+	var ret={};
+	pforeach(db["author"],function(author){
+		ret[author.id]=author;
+	});
+	return ret;
+}
+
+
 
 
 /**
@@ -357,24 +369,25 @@ function addBrick(dx, thisunit, db){
 	
 	////////////////////////////////////////////////////////////////////////
 	// Title with abstract
-	var qj1=document.createElement("div");
-	qj1.setAttribute("class","row");
 
-	var qj1a=document.createElement("div");
-	qj1a.setAttribute("class","project_title");
 //	qj1a.setAttribute("class","col7 colExample");
 
-	var pqja=document.createElement("p");
-	pqja.setAttribute("align","left");
 
 	var h1a=document.createElement("h1");
-	var t1a=document.createTextNode("Brick: "/*+(i+1).toString()+":"*/+thisunit.name);
-					//TODO should rather check what is the top-level brick! best to separate out the code to place one component into a separate method
-											
-	h1a.appendChild(t1a);
+	h1a.appendChild(document.createTextNode(/*"Brick: "+*/thisunit.name));
+	
+	var pqja=document.createElement("p");
+	pqja.setAttribute("align","left");
 	pqja.appendChild(h1a);
+	
+	var qj1a=document.createElement("div");
+	qj1a.setAttribute("class","project_title");
 	qj1a.appendChild(pqja);
+	
+	var qj1=document.createElement("div");
+//	qj1.setAttribute("class","row");
 	qj1.appendChild(qj1a);
+	
 	dx.appendChild(qj1);
 
 	thisunit.abstract=text0(thisunit["abstract"]);
@@ -384,6 +397,11 @@ function addBrick(dx, thisunit, db){
 		var text=document.createTextNode(thisunit.abstract);
 		pqjb.appendChild(text);
 		qj1a.appendChild(pqjb);
+		
+		/*
+		var br=document.createElement("br");
+		br.setAttribute("clear","all");
+		qj1a.appendChild(br);*/
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -425,43 +443,57 @@ function addBrick(dx, thisunit, db){
 	var legalnode=document.createElement("div")
 	legalnode.setAttribute("class","col12 colExample");
 
-	var qlegnodea=document.createElement("p");
-	qlegnodea.setAttribute("align","left");
-	var qlegnodeb=document.createElement("h1");
-	var qlegnodec=document.createTextNode("Legal.");
-	qlegnodeb.appendChild(qlegnodec);
-	qlegnodea.appendChild(qlegnodeb);
-	legalnode.appendChild(qlegnodea);
-
-
+	//License
 	thisunit.license=text0(thisunit["license"]);
 	if(thisunit.license!=""){
-		var plegnodex=document.createElement("p");
-		plegnodex.setAttribute("align","left");
+		var p2=document.createElement("b");
+		p2.appendChild(document.createTextNode("License: "));
 		
-		plegnodex.appendChild(document.createTextNode("Licence:"));
-		plegnodex.appendChild(document.createTextNode(thisunit.license));
-		legalnode.appendChild(plegnodex);
-		
+		var p1=document.createElement("p");
+		p1.setAttribute("align","left");
+		p1.appendChild(p2);
+		p1.appendChild(document.createTextNode(thisunit.license));
+		legalnode.appendChild(p1);
 		anyLegal=true;
 	}
 
 
-	if(true){
-		var plegnodebx=document.createElement("p");
-		plegnodebx.setAttribute("align","left");
-		plegnodebx.appendChild(document.createTextNode("Authors:"));
-		legalnode.appendChild(plegnodebx);
+	//Authors. TODO some way to get orcid etc
+	var authormap = getAuthorMap(db);
+	thisunit.author=atleast1(thisunit["author"]);
+	if(thisunit.author.length>0){
+		var p2=document.createElement("b");
+		p2.appendChild(document.createTextNode("Authors: "));		
+		var p1=document.createElement("p");
+		p1.setAttribute("align","left");
+		p1.appendChild(p2);
+		legalnode.appendChild(p1);
+
+		var firstauthor=true;
+		pforeach(thisunit.author,function(authorid){
+			if(!firstauthor)
+				p1.appendChild(document.createTextNode(", "));
+			console.log(authorid.id)
+			
+			var author=authormap[authorid.id];
+			p1.appendChild(document.createTextNode(author.name + " <"+author.email+">"));
+			firstauthor=false;
+		});
 		anyLegal=true;
 	}
 
-
-	if(true){
-		var plegnodecx=document.createElement("p");
-		plegnodecx.setAttribute("align","left");
-		var txtc=document.createTextNode("Copyright:");
-		plegnodecx.appendChild(txtc);
-		legalnode.appendChild(plegnodecx);
+	//Copyright
+	thisunit.copyright=text0(thisunit["copyright"]);
+	//thisunit.copyright="aoeoae";
+	if(thisunit.copyright!=""){
+		var p2=document.createElement("b");
+		p2.appendChild(document.createTextNode("Copyright: "));
+		
+		var p1=document.createElement("p");
+		p1.setAttribute("align","left");
+		p1.appendChild(p2);
+		p1.appendChild(document.createTextNode(thisunit.copyright));
+		legalnode.appendChild(p1);
 		anyLegal=true;
 	}
 
@@ -614,8 +646,6 @@ function addBrickBOM(dx, thisbrick, db){
  */
 function addInstruction(dx, thisunit, instruction){
 	instruction.step = atleast1(instruction["step"]);
-	
-
 
 	if (instruction.step.length==0){
 
@@ -624,26 +654,15 @@ function addInstruction(dx, thisunit, instruction){
 		//Add new instance of BOM
 		var form2 = $("#instructiontable").get(0).cloneNode(true);
 		dx.appendChild(form2);
-		//var tbody=$(form2).find("#divinstruction");
 		form2=$(form2);
-
-		//console.log(tbody);
 		
 		$(form2).find("#instructionname").html("Assembly instructions");
-
-
-		
 		
 		for(var muj=0;muj<instruction.step.length;muj++){
 			thisstep=instruction.step[muj];
 			
 			var row = $("#instructionstep").get(0).cloneNode(true);
 			form2.get(0).appendChild(row);
-			//row=$(row);
-			//row.find("#quantity").html(imp.quantity);
-
-			
-			
 			
 			///////////////////////////////////////////////////
 			// NOOOOOOTE: there can be more than one media file!
@@ -697,9 +716,6 @@ function addInstruction(dx, thisunit, instruction){
 			br.setAttribute("clear","all");
 			row.appendChild(br);
 			
-//			aidivn.appendChild(aininfo);
-//			assins.appendChild(aidivn);
-//			dx.appendChild(assins);
 		}
 	}
 	
