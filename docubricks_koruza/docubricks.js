@@ -60,12 +60,12 @@ function renderBricksTree(db){
 
 
 /**
- * Get a JSON map   unitID => unit
+ * Get a JSON map   brickID => brick
  */
 function getBricksMap(db) {	
 	var ret={};
-	pforeach(db["unit"],function(unit){
-		ret[unit.id]=unit;
+	pforeach(db["brick"],function(brick){
+		ret[brick.id]=brick;
 	});
 	return ret;
 }
@@ -81,6 +81,20 @@ function getPartsMap(db) {
 	return ret;
 }
 
+
+/**
+ * Get a function map   functionID => function
+ */
+function getFunctionsMap(brick) {	
+	var ret={};
+	pforeach(brick["function"],function(p){
+		ret[p.id]=p;
+	});
+	return ret;
+}
+
+
+
 /**
  * Get a JSON map   authorID => author
  */
@@ -91,6 +105,7 @@ function getAuthorMap(db) {
 	});
 	return ret;
 }
+
 
 
 
@@ -122,10 +137,10 @@ function pforeach(elem,f){
 function getTopBricks(db){
 	//Make a list of referenced nodes
 	var usednodes = {};
-	pforeach(db["unit"],function(unit){
-		pforeach(unit["logical_part"], function(lu){
+	pforeach(db["brick"],function(brick){
+		pforeach(brick["function"], function(lu){
 			pforeach(lu["implementation"], function(imp){
-				if(imp.type=="unit")
+				if(imp.type=="brick")
 					usednodes[imp.id]=1;
 			});
 		});
@@ -133,9 +148,9 @@ function getTopBricks(db){
 
 	//Keep only nodes without references
 	var hasnodes = [];
-	pforeach(db["unit"],function(unit){
-		if(usednodes[unit.id]!=1) {
-			hasnodes.push(unit.id);
+	pforeach(db["brick"],function(brick){
+		if(usednodes[brick.id]!=1) {
+			hasnodes.push(brick.id);
 		}
 	});
 	return hasnodes;
@@ -156,9 +171,9 @@ function getBricksTree(db){
 	function getBricksTreeR(m,parentid){
 		var ret = {brickid:parentid, children:[]};
 		pu = m[parentid];
-		pforeach(pu["logical_part"], function(lu){
+		pforeach(pu["function"], function(lu){
 			pforeach(lu["implementation"], function(imp){
-				if(imp.type=="unit")
+				if(imp.type=="brick")
 					ret.children.push(getBricksTreeR(m, imp.id));
 			});
 		});
@@ -189,14 +204,14 @@ function getPhysicalPartCount(db){
 	
 	function getPhysicalPartCountR(m,parentid){
 		pu = m[parentid];
-		pforeach(pu["logical_part"], function(lu){
+		pforeach(pu["function"], function(lu){
 			pforeach(lu["implementation"], function(imp){
 				if(imp.type=="physical_part"){
 					var q=lu.quantity;
 					if(isNaN(q))
 						q="1";
 					partcount[imp.id] += parseInt(q);
-				} else if(imp.type=="unit") {
+				} else if(imp.type=="brick") {
 					getPhysicalPartCountR(m,imp.id);
 				}
 			});
@@ -258,6 +273,7 @@ function string2xml(txt){
 function loadxml2(){
 	//think this can be done less convoluted?
 	xmls = document.getElementById("hiddendata").children[0];
+	console.log(xmls);
 	xmls = new XMLSerializer().serializeToString(xmls);
 	xmls = string2xml(xmls).documentElement;
 	
@@ -304,7 +320,7 @@ function populatePage(db){
 	qx=document.getElementById('name-box');
 	qx.appendChild(q1);
 
-	for (var i=0; i < db.unit.length; i++) {
+	for (var i=0; i < db.brick.length; i++) {
 		var qj=document.createElement("a");
 		qj.setAttribute("class", "button");
 		qj.setAttribute("href","#");
@@ -327,8 +343,8 @@ function populatePage(db){
 	var flatlistbricks = flattenBricksTree(db);
 	var m = getBricksMap(db);
 	for (var i=0; i < flatlistbricks.length; i++) {
-		var thisunit=m[flatlistbricks[i]];
-		addBrick(dx, thisunit, db);
+		var thisbrick=m[flatlistbricks[i]];
+		addBrick(dx, thisbrick, db);
 
 		var br=document.createElement("br");
 		br.setAttribute("clear","all");
@@ -356,14 +372,14 @@ function text0(t){
 /**
  * Add one brick
  */
-function addBrick(dx, thisunit, db){
-	var nm = thisunit.name;
+function addBrick(dx, thisbrick, db){
+	var nm = thisbrick.name;
 
 	
 	////////////////////////////////////////////////////////////////////////
 	// Link here
 	var anch=document.createElement("a");
-	anch.setAttribute("name","brick_"+thisunit.id);
+	anch.setAttribute("name","brick_"+thisbrick.id);
 	dx.appendChild(anch);
 	
 	////////////////////////////////////////////////////////////////////////
@@ -373,7 +389,7 @@ function addBrick(dx, thisunit, db){
 
 
 	var h1a=document.createElement("h1");
-	h1a.appendChild(document.createTextNode(/*"Brick: "+*/thisunit.name));
+	h1a.appendChild(document.createTextNode(/*"Brick: "+*/thisbrick.name));
 	
 	var pqja=document.createElement("p");
 	pqja.setAttribute("align","left");
@@ -389,19 +405,21 @@ function addBrick(dx, thisunit, db){
 	
 	dx.appendChild(qj1);
 
-	thisunit.abstract=text0(thisunit["abstract"]);
-	if(thisunit.abstract!=""){
+	thisbrick.abstract=text0(thisbrick["abstract"]);
+	if(thisbrick.abstract!=""){
 		var pqjb=document.createElement("p");
 		pqjb.setAttribute("align","left");
-		var text=document.createTextNode(thisunit.abstract);
+		var text=document.createTextNode(thisbrick.abstract);
 		pqjb.appendChild(text);
 		qj1a.appendChild(pqjb);
 	}
+	
+	
 
 	////////////////////////////////////////////////////////////////////////
 	// Representative image
 	if(false){
-		var toi=typeof thisunit.media[0];
+		var toi=typeof thisbrick.media[0];
 		var qj1b=document.createElement("div");
 		qj1b.setAttribute("class","col5 colExample");
 		var img=document.createElement("img");
@@ -410,7 +428,7 @@ function addBrick(dx, thisunit, db){
 			img.setAttribute("src",'images/Logo.png');
 								//img.id="picture"
 		}else{
-			img.setAttribute("src",thisunit.media[0]);
+			img.setAttribute("src",thisbrick.media[0]);
 							//img.id="picture"
 		}
 		qj1b.appendChild(img);
@@ -425,9 +443,7 @@ function addBrick(dx, thisunit, db){
 
 	////////////////////////////////////////////////////////////////////////
 	// The top what/why/how
-	addsomehow(dx, thisunit, "what", "What: ");
-	addsomehow(dx, thisunit, "why", "Why: ");
-	addsomehow(dx, thisunit, "how", "How: ");
+	addsomehow(dx, thisbrick, "notes", "Notes: ");
 
 	///////////////////////////////////////////////////////////////////////////
 	// Legal
@@ -438,15 +454,15 @@ function addBrick(dx, thisunit, db){
 	legalnode.setAttribute("class","col12 colExample");
 
 	//License
-	thisunit.license=text0(thisunit["license"]);
-	if(thisunit.license!=""){
+	thisbrick.license=text0(thisbrick["license"]);
+	if(thisbrick.license!=""){
 		var p2=document.createElement("b");
 		p2.appendChild(document.createTextNode("License: "));
 		
 		var p1=document.createElement("p");
 		p1.setAttribute("align","left");
 		p1.appendChild(p2);
-		p1.appendChild(document.createTextNode(thisunit.license));
+		p1.appendChild(document.createTextNode(thisbrick.license));
 		legalnode.appendChild(p1);
 		anyLegal=true;
 	}
@@ -454,8 +470,8 @@ function addBrick(dx, thisunit, db){
 
 	//Authors. TODO some way to get orcid etc
 	var authormap = getAuthorMap(db);
-	thisunit.author=atleast1(thisunit["author"]);
-	if(thisunit.author.length>0){
+	thisbrick.author=atleast1(thisbrick["author"]);
+	if(thisbrick.author.length>0){
 		var p2=document.createElement("b");
 		p2.appendChild(document.createTextNode("Authors: "));		
 		var p1=document.createElement("p");
@@ -464,7 +480,7 @@ function addBrick(dx, thisunit, db){
 		legalnode.appendChild(p1);
 
 		var firstauthor=true;
-		pforeach(thisunit.author,function(authorid){
+		pforeach(thisbrick.author,function(authorid){
 			if(!firstauthor)
 				p1.appendChild(document.createTextNode(", "));
 			console.log(authorid.id)
@@ -477,16 +493,16 @@ function addBrick(dx, thisunit, db){
 	}
 
 	//Copyright
-	thisunit.copyright=text0(thisunit["copyright"]);
-	//thisunit.copyright="aoeoae";
-	if(thisunit.copyright!=""){
+	thisbrick.copyright=text0(thisbrick["copyright"]);
+	//thisbrick.copyright="aoeoae";
+	if(thisbrick.copyright!=""){
 		var p2=document.createElement("b");
 		p2.appendChild(document.createTextNode("Copyright: "));
 		
 		var p1=document.createElement("p");
 		p1.setAttribute("align","left");
 		p1.appendChild(p2);
-		p1.appendChild(document.createTextNode(thisunit.copyright));
+		p1.appendChild(document.createTextNode(thisbrick.copyright));
 		legalnode.appendChild(p1);
 		anyLegal=true;
 	}
@@ -539,14 +555,14 @@ function addBrick(dx, thisunit, db){
 	
 	//////////////////////////////////////////////////////////////////////////
 	// Assembly
-	if(!("assembly_instruction" in thisunit))
-		thisunit.assembly_instruction={};
-	addInstruction(dx, thisunit, thisunit.assembly_instruction);
+	if(!("assembly_instruction" in thisbrick))
+		thisbrick.assembly_instruction={};
+	addInstruction(dx, thisbrick, thisbrick.assembly_instruction, db);
 
 	
 	////////////////////////////////////////////////////////////////////////
 	// BOM
-	addBrickBOM(dx, thisunit, db);
+	addBrickBOM(dx, thisbrick, db);
 	
 }
 
@@ -598,7 +614,7 @@ function addBrickBOM(dx, thisbrick, db){
 	//Add rows
 	var pmap = getPartsMap(db);
 	var brickmap = getBricksMap(db);
-	pforeach(thisbrick["logical_part"], function(lu){
+	pforeach(thisbrick["function"], function(lu){
 		pforeach(lu["implementation"], function(imp){
 			var row = $("#brickbomrow").get(0).cloneNode(true);
 			tbody.get(0).appendChild(row);
@@ -609,28 +625,75 @@ function addBrickBOM(dx, thisbrick, db){
 			row.find("#quantity").html(quantity);
 			
 			if(imp.type=="physical_part"){
-				
 				var thepart=pmap[imp.id];
 				row.find("#description").html(thepart.description);
-				
-
-			} else if(imp.type=="unit") {
-				
+			} else if(imp.type=="brick") {
 				var thebrick = brickmap[imp.id];
-
 				row.find("#description").html(thebrick.name);
-
 				row.find("#description").attr("href","#brick_"+thebrick.id);
-
-				
 			} else 
 				console.log("bad imp.type "+imp.type)
 		});
 	});
+}
+
+
+			
+/**
+ * Get the representative name of a function
+ */
+function getFunctionRepresentativeName(db,func,partmap, brickmap){
+	console.log(func);
+	var thename="&lt;Unnamed function&gt;";
+	if(text0(func.description)!="")
+		return func.description;
+	pforeach(func["implementation"], function(imp){
+		if(imp.type=="physical_part"){
+			var thepart=partmap[imp.id];
+			thename=thepart.description;
+		} else if(imp.type=="brick") {
+			var thebrick = brickmap[imp.id];
+			thename=thebrick.name;
+		} else 
+			console.log("bad imp.type "+imp.type)
+	});
+	return thename;
+}
+
+
+
+/**
+ * Add brick bill of materials
+ */
+function addStepBOM(dx, thisbrick, thisstep, db){
 	
-	
-	  
-	
+	if(atleast1(thisstep["component"]).length != 0) {
+		
+		//Add new instance of BOM
+		var form2 = $("#stepbomtable").get(0).cloneNode(true);
+		dx.appendChild(form2);
+		form2=$(form2);
+		var tbody=$(form2).find("#stepbombody");
+		
+		//Add rows
+		var partmap = getPartsMap(db);
+		var brickmap = getBricksMap(db);
+		var funcmap = getFunctionsMap(thisbrick);
+		pforeach(thisstep["component"], function(stepcomp){
+			
+			var row = $("#stepbomrow").get(0).cloneNode(true);
+			tbody.get(0).appendChild(row);
+			row=$(row);
+			var quantity=stepcomp.quantity;
+			if(isNaN(quantity))
+				quantity="1";
+			row.find("#quantity").html(quantity);
+			var repname = getFunctionRepresentativeName(db,funcmap[stepcomp.id],partmap, brickmap);
+			row.find("#description").html(repname);
+
+		});
+		
+	}
 }
 
 
@@ -638,7 +701,7 @@ function addBrickBOM(dx, thisbrick, db){
 /**
  * Add one set of instructions
  */
-function addInstruction(dx, thisunit, instruction){
+function addInstruction(dx, thisbrick, instruction, db){
 	instruction.step = atleast1(instruction["step"]);
 
 	if (instruction.step.length==0){
@@ -651,7 +714,7 @@ function addInstruction(dx, thisunit, instruction){
 		form2=$(form2);
 		
 		$(form2).find("#instructionname").html("Assembly instructions");
-		
+
 		for(var muj=0;muj<instruction.step.length;muj++){
 			thisstep=instruction.step[muj];
 			
@@ -701,10 +764,15 @@ function addInstruction(dx, thisunit, instruction){
 			aidescp.appendChild(aititle);
 
 			
-			var aidescptxt=document.createTextNode(text0(thisunit.assembly_instruction.step[muj].description));
+			var aidescptxt=document.createTextNode(text0(thisbrick.assembly_instruction.step[muj].description));
 			aidescp.appendChild(aidescptxt);
 			stepndesc.appendChild(aidescp);
 			row.appendChild(stepndesc);
+
+			var br=document.createElement("br");
+			row.appendChild(br);
+
+			addStepBOM(row, thisbrick, thisstep, db);
 
 			var br=document.createElement("br");
 			br.setAttribute("clear","all");
@@ -719,8 +787,8 @@ function addInstruction(dx, thisunit, instruction){
 /**
  * Optionally add: Why, How, What
  */
-function addsomehow(dx, thisunit, elem, head){
-	if(elem in thisunit && thisunit[elem].length!=undefined){
+function addsomehow(dx, thisbrick, elem, head){
+	if(elem in thisbrick && thisbrick[elem].length!=undefined){
 		var qhowb=document.createElement("h1");
 		qhowb.appendChild(document.createTextNode(head));
 
@@ -730,7 +798,7 @@ function addsomehow(dx, thisunit, elem, head){
 
 		var phow=document.createElement("p");
 		phow.setAttribute("align","left");		
-		phow.appendChild(document.createTextNode(thisunit[elem]));
+		phow.appendChild(document.createTextNode(thisbrick[elem]));
 
 		var qhow=document.createElement("div");
 		qhow.setAttribute("class","col4 colExample");

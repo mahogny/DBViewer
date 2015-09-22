@@ -16,11 +16,11 @@
 
 	<!--  Original XML data goes in here  -->
 	<hiddendata class="hideclass" id="hiddendata">
-		<xsl:copy-of select="project"/>
+		<xsl:copy-of select="docubricks"/>
 	</hiddendata>
 	
 	
-	<!--  Bill of materials table for one brick-->
+	<!--  Bill of materials table for one brick -->
 	<hidden class="hideclass">
 		<div class="col12 colExample" id="brickbomtable">
 			<div class="divbom">
@@ -88,6 +88,36 @@
 	
 	
 	
+
+
+
+	<!--  Bill of materials table for one step -->
+	<hidden class="hideclass">
+		<div id="stepbomtable">
+			<div class="divbom">
+				<p class="p_h2" id="stepbomname">
+					Referenced components
+				</p>
+			</div>
+			<p align="center">
+				<table>
+					<thead>
+						<tr>
+							<th>DESCRIPTION</th>
+							<th>QUANTITY</th>
+						</tr>
+					</thead>
+					<tbody id="stepbombody">
+					</tbody>
+				</table>
+			</p>
+		</div>
+		<tr id="stepbomrow">
+			<td><a id="description"> </a></td>
+			<td id="quantity"></td>
+		</tr>
+	</hidden>
+
 
 	<!--  Instruction table -->
 	<hidden>
