@@ -73,12 +73,12 @@ loadxml();
 		qx.appendChild(q1);
 
 	for (var i=0, sl=db.unit.length; i < sl; i++) {
-	 console.log(db.unit[i]);
-	 console.log(db.unit[i].name);
-	 console.log(db.unit[i].assembly_instruction);
+		/*console.log(db.unit[i]);
+		console.log(db.unit[i].name);
+		console.log(db.unit[i].assembly_instruction);*/
 
 		var lk=Object.keys(db.unit[i].assembly_instruction).length;
-		console.log(lk);
+		//console.log(lk);
 
 		if(lk>0){
 		   var ln=db.unit[i].assembly_instruction.step.length;
@@ -92,7 +92,7 @@ loadxml();
 		 	}
 		 //var lnx=Object.keys(db.unit[i].assembly_instruction.step.length)
 			//console.log(lnx);
-	 }
+		}
 
 		var qj=document.createElement("a");
 		qj.setAttribute("class", "button");
@@ -123,7 +123,7 @@ loadxml();
 						var pqja=document.createElement("p");
 						pqja.setAttribute("align","left");
 
-					 var h1a=document.createElement("h1");
+						var h1a=document.createElement("h1");
 						var t1a=document.createTextNode("Project Description:");
 
 						h1a.appendChild(t1a);
@@ -134,7 +134,7 @@ loadxml();
 						var pqjb=document.createElement("p");
 						pqjb.setAttribute("align","left");
 						var text=document.createTextNode(db.unit[i].abstract);
-      pqjb.appendChild(text);
+						pqjb.appendChild(text);
 						qj1a.appendChild(pqjb);
 						qj1.appendChild(qj1a);
 						dx.appendChild(qj1);
@@ -157,11 +157,11 @@ loadxml();
 						qj1.appendChild(qj1b);
 						dx.appendChild(qj1);
 
-     var wwhow=document.createElement("div");
+					var wwhow=document.createElement("div");
 					wwhow.setAttribute("class","row");
 
-     ////////////////////////////////////////////////////////////////////////
-				 var qwhat=document.createElement("div");
+					////////////////////////////////////////////////////////////////////////
+					var qwhat=document.createElement("div");
 					qwhat.setAttribute("class","col4 colExample");
 					var qwhata=document.createElement("p");
 					qwhata.setAttribute("align","left");
@@ -235,7 +235,7 @@ loadxml();
 
 					///////////////////////////////////////////////////////////////////////////
 					var legalnode=document.createElement("div")
-				 legalnode.setAttribute("class","col12 colExample");
+					legalnode.setAttribute("class","col12 colExample");
 
 					var qlegnodea=document.createElement("p");
 					qlegnodea.setAttribute("align","left");
@@ -406,7 +406,7 @@ dx.appendChild(spaces);
 						var pqja=document.createElement("p");
 						pqja.setAttribute("align","left");
 
-					 var h1a=document.createElement("h1");
+						var h1a=document.createElement("h1");
 						var t1a=document.createTextNode("Brick "+(i+1).toString()+":"+db.unit[i].name);
 
 						h1a.appendChild(t1a);
@@ -417,7 +417,7 @@ dx.appendChild(spaces);
 						var pqjb=document.createElement("p");
 						pqjb.setAttribute("align","left");
 						var text=document.createTextNode(db.unit[i].abstract);
-      pqjb.appendChild(text);
+						pqjb.appendChild(text);
 						qj1a.appendChild(pqjb);
 						qj1.appendChild(qj1a);
 						dx.appendChild(qj1);
